@@ -1,0 +1,60 @@
+dataset:
+  name: "ISIC_2018_128X128_6705"
+  root_dir: "data/ISIC_2018_128X128_6705"
+  num_classes: 7
+  class_names:
+    - "AKIEC"
+    - "BCC"
+    - "BKL"
+    - "DF"
+    - "MEL"
+    - "NV"
+    - "VASC"
+  source_image_size: [128, 128]
+  target_image_size: [224, 224]
+  channels: 3
+
+preprocessing:
+  rescale_factor: 0.00392156862745098  # 1/255
+
+augmentation:
+  rotation_range: 20
+  width_shift_range: 0.1
+  height_shift_range: 0.1
+  zoom_range: 0.1
+  shear_range: 10.0
+  horizontal_flip: true
+  fill_mode: "nearest"
+
+model:
+  input_shape: [224, 224, 3]
+  cnn_filters: [32, 64, 128, 256]
+  kernel_size: [3, 3]
+  spatial_attention_kernel: 7
+  channel_attention_reduction_ratio: 16
+  bilstm_units: [128, 64]
+  dense_units: 512
+  dropout_rate: 0.5
+  num_classes: 7
+
+training:
+  seed: 42
+  batch_size: 32
+  epochs: 20
+  initial_lr: 0.001
+  optimizer: "adam"
+  loss: "categorical_crossentropy"
+  callbacks:
+    reduce_lr:
+      factor: 0.2
+      patience: 5
+      min_lr: 0.001
+      monitor: "val_loss"
+    early_stopping:
+      patience: 10
+      restore_best_weights: true
+      monitor: "val_loss"
+
+outputs:
+  experiment_dir: "experiments/baseline"
+  results_dir: "results/baseline"
