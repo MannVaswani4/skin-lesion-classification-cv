@@ -9,6 +9,7 @@ USAGE:
 import os
 import argparse
 import json
+import pandas as pd
 import yaml
 
 from src.utils import set_seeds, load_config, ensure_dir
@@ -60,7 +61,7 @@ def main():
         metrics=['accuracy']
     )
 
-    # 6. Callbacks
+    # 6. Callbacks (Validation Loss monitored per paper specifications)
     cb_cfg = config['training']['callbacks']
     reduce_lr = tf.keras.callbacks.ReduceLROnPlateau(
         monitor=cb_cfg['reduce_lr']['monitor'],
@@ -87,7 +88,7 @@ def main():
 
     callbacks = [reduce_lr, early_stopping, model_checkpoint]
 
-    if args.dry-run:
+    if args.dry_run:
         print("[DRY-RUN] Model built and compiled successfully. Training skipped per --dry-run flag.")
         return
 
@@ -99,12 +100,19 @@ def main():
         callbacks=callbacks
     )
 
-    # Save final model & history log
+    # Save final model & history logs
     model.save(os.path.join(exp_dir, "final_model.h5"))
+    
     with open(os.path.join(exp_dir, "history.json"), "w") as f:
         json.dump(history.history, f, indent=2)
 
+    # Save training_history.csv to results/baseline/
+    history_df = pd.DataFrame(history.history)
+    history_df['epoch'] = range(1, len(history_df) + 1)
+    history_df.to_csv(os.path.join(results_dir, "training_history.csv"), index=False)
+
     print("Training complete! Model and logs saved to:", exp_dir)
+    print("Training history CSV saved to:", os.path.join(results_dir, "training_history.csv"))
 
 if __name__ == "__main__":
     main()
